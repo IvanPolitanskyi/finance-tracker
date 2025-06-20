@@ -3,7 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Учет доходов и расходов</title>
+    <title>Учет финансов</title>
+    
+    <!-- Мобильная оптимизация -->
+    <meta name="theme-color" content="#3498db">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Финансы">
+    
+    <!-- Иконки для мобильных -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    
+    <!-- Preconnect для быстрой загрузки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- CSS переменная для мобильного viewport -->
+    <style>
+    :root {
+        --vh: 1vh;
+    }
+    .full-height {
+        height: calc(var(--vh, 1vh) * 100);
+    }
+    </style>
+    
+    <!-- Манифест для PWA -->
+    <link rel="manifest" href="data:application/json,{
+        'name': 'Учет финансов',
+        'short_name': 'Финансы',
+        'description': 'Приложение для учета доходов и расходов',
+        'start_url': '/',
+        'display': 'standalone',
+        'background_color': '#ffffff',
+        'theme_color': '#3498db',
+        'orientation': 'portrait',
+        'icons': [
+            {
+                'src': 'data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><text y=\".9em\" font-size=\"90\">💰</text></svg>',
+                'sizes': '192x192',
+                'type': 'image/svg+xml'
+            }
+        ]
+    }">
+    
     <link rel="stylesheet" href="css_styles.css">
 </head>
 <body>
@@ -11,198 +55,400 @@
         <div class="header">
             <h1>💰 Учет финансов</h1>
             <div class="auth-section">
-                <div class="user-info" id="userInfo">
-                    <button class="auth-btn" onclick="signInWithGoogle()">
-                        🔐 Войти через Google
-                    </button>
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <img id="userPhoto" src="" alt="Фото пользователя" class="user-photo">
+                    <span id="userName"></span>
+                    <button class="btn" onclick="signOutUser()">Выйти</button>
                 </div>
-                <div class="sync-indicator sync-offline" id="syncIndicator">
-                    ⚠️ Оффлайн режим
-                </div>
-            </div>
-            <div class="month-selector">
-                <select id="monthSelect">
-                    <option value="0">Январь 2025</option>
-                    <option value="1">Февраль 2025</option>
-                    <option value="2">Март 2025</option>
-                    <option value="3">Апрель 2025</option>
-                    <option value="4">Май 2025</option>
-                    <option value="5">Июнь 2025</option>
-                    <option value="6">Июль 2025</option>
-                    <option value="7">Август 2025</option>
-                    <option value="8">Сентябрь 2025</option>
-                    <option value="9">Октябрь 2025</option>
-                    <option value="10">Ноябрь 2025</option>
-                    <option value="11">Декабрь 2025</option>
-                </select>
+                <button class="btn btn-login" id="loginBtn" onclick="signInWithGoogle()" style="display: block;">
+                    Войти через Google
+                </button>
             </div>
         </div>
-        
+
         <div class="content">
-            <div id="loadingSection" class="loading">
-                <div class="loading-spinner"></div>
-                <p>Загрузка приложения...</p>
+            <!-- Форма добавления транзакции -->
+            <div class="controls">
+                <div class="input-group">
+                    <label>Дата:</label>
+                    <input type="date" id="dateInput">
+                </div>
+                <div class="input-group">
+                    <label>Тип:</label>
+                    <select id="typeSelect" onchange="updateCategoryOptions()">
+                        <option value="income">Доход</option>
+                        <option value="expense">Расход</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Категория:</label>
+                    <select id="categorySelect">
+                        <option value="salary">Зарплата</option>
+                        <option value="business">Бизнес</option>
+                        <option value="investments">Инвестиции</option>
+                        <option value="other_income">Другое</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Сумма:</label>
+                    <input type="number" id="amountInput" step="0.01" placeholder="0.00">
+                </div>
+                <div class="input-group">
+                    <label>Валюта:</label>
+                    <select id="currencySelect">
+                        <option value="MDL">MDL</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="RON">RON</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Описание:</label>
+                    <input type="text" id="descriptionInput" placeholder="Описание транзакции">
+                </div>
+                <button class="btn btn-add" onclick="addTransaction()">Добавить</button>
             </div>
-            
-            <div id="appContent" style="display: none;">
-                <!-- Форма добавления транзакций -->
-                <div class="controls">
+
+            <!-- Фильтры -->
+            <div class="filters">
+                <div class="input-group">
+                    <label>Месяц:</label>
+                    <select id="monthSelect" onchange="updateDisplay()">
+                        <option value="0">Январь</option>
+                        <option value="1">Февраль</option>
+                        <option value="2">Март</option>
+                        <option value="3">Апрель</option>
+                        <option value="4">Май</option>
+                        <option value="5">Июнь</option>
+                        <option value="6">Июль</option>
+                        <option value="7">Август</option>
+                        <option value="8">Сентябрь</option>
+                        <option value="9">Октябрь</option>
+                        <option value="10">Ноябрь</option>
+                        <option value="11">Декабрь</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Год:</label>
+                    <select id="yearSelect" onchange="updateDisplay()">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+                <button class="btn btn-export" onclick="exportToExcel()">📊 Экспорт в Excel</button>
+            </div>
+
+            <!-- Сводка -->
+            <div class="summary" id="summary">
+                <div class="summary-card income">
+                    <h3>Доходы</h3>
+                    <div class="amount" id="totalIncome">0.00 MDL</div>
+                </div>
+                <div class="summary-card expense">
+                    <h3>Расходы</h3>
+                    <div class="amount" id="totalExpense">0.00 MDL</div>
+                </div>
+                <div class="summary-card balance">
+                    <h3>Баланс</h3>
+                    <div class="amount" id="balance">0.00 MDL</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Статус синхронизации</h3>
+                    <div class="sync-status" id="syncStatus">⏳ Инициализация...</div>
+                </div>
+            </div>
+
+            <!-- Обмен валют -->
+            <div class="exchange-section">
+                <h3>💱 Обмен валют</h3>
+                <div class="exchange-form">
                     <div class="input-group">
-                        <label>Дата</label>
-                        <input type="date" id="dateInput">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label>Тип</label>
-                        <select id="typeSelect">
-                            <option value="income">Доход</option>
-                            <option value="expense">Расход</option>
-                        </select>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label>Категория</label>
-                        <select id="categorySelect">
-                            <!-- Заполняется динамически -->
-                        </select>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label>Сумма</label>
-                        <input type="number" id="amountInput" placeholder="0.00" step="0.01">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label>Валюта</label>
-                        <select id="currencySelect">
+                        <label>Из валюты:</label>
+                        <select id="fromCurrency">
                             <option value="MDL">MDL</option>
-                            <option value="UAH">UAH</option>
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
-                            <option value="USDT">USDT</option>
+                            <option value="RON">RON</option>
                         </select>
                     </div>
-                    
                     <div class="input-group">
-                        <label>Описание</label>
-                        <input type="text" id="descriptionInput" placeholder="Описание...">
+                        <label>Сумма:</label>
+                        <input type="number" id="exchangeAmount" step="0.01" placeholder="0.00" oninput="calculateExchange()">
                     </div>
-                    
+                    <div class="exchange-arrow">⇄</div>
                     <div class="input-group">
-                        <label>&nbsp;</label>
-                        <button class="btn btn-add" onclick="addTransaction()">Добавить</button>
+                        <label>В валюту:</label>
+                        <select id="toCurrency" onchange="calculateExchange()">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="RON">RON</option>
+                            <option value="MDL">MDL</option>
+                        </select>
                     </div>
-                    
                     <div class="input-group">
-                        <label>&nbsp;</label>
-                        <button class="btn btn-export" onclick="exportToExcel()">Экспорт в Excel</button>
+                        <label>Результат:</label>
+                        <input type="text" id="exchangeResult" readonly placeholder="0.00">
                     </div>
+                    <button class="btn" onclick="addExchangeTransaction()">Добавить обмен</button>
                 </div>
-                
-                <!-- Секция обмена валют -->
-                <div class="exchange-section">
-                    <h3>💱 Обмен валют</h3>
-                    <div class="exchange-form">
-                        <div class="input-group">
-                            <label>Дата обмена</label>
-                            <input type="date" id="exchangeDateInput">
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Отдаете</label>
-                            <input type="number" id="fromAmountInput" placeholder="0.00" step="0.01">
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Валюта</label>
-                            <select id="fromCurrencySelect">
-                                <option value="MDL">MDL</option>
-                                <option value="UAH">UAH</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="USDT">USDT</option>
-                            </select>
-                        </div>
-                        
-                        <div class="exchange-arrow">→</div>
-                        
-                        <div class="input-group">
-                            <label>Получаете</label>
-                            <input type="number" id="toAmountInput" placeholder="0.00" step="0.01">
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Валюта</label>
-                            <select id="toCurrencySelect">
-                                <option value="MDL">MDL</option>
-                                <option value="UAH">UAH</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="USDT">USDT</option>
-                            </select>
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Комиссия</label>
-                            <input type="number" id="feeInput" placeholder="0.00" step="0.01" value="0">
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Валюта комиссии</label>
-                            <select id="feeCurrencySelect">
-                                <option value="MDL">MDL</option>
-                                <option value="UAH">UAH</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="USDT">USDT</option>
-                            </select>
-                        </div>
-                        
-                        <div class="rate-display" id="rateDisplay">
-                            Курс: -
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>&nbsp;</label>
-                            <button class="btn btn-add" onclick="addExchange()">Обменять</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Сводка по валютам -->
-                <div class="summary" id="summaryContainer"></div>
-                
-                <!-- Таблица транзакций -->
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Дата</th>
-                                <th>Тип</th>
-                                <th>Категория</th>
-                                <th>Описание</th>
-                                <th>Сумма</th>
-                                <th>Валюта</th>
-                                <th>Действие</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionTable">
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Разбивка по категориям -->
-                <div id="categoryBreakdown" class="categories"></div>
+            </div>
+
+            <!-- Таблица транзакций -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тип</th>
+                            <th>Сумма</th>
+                            <th>Описание</th>
+                            <th>Категория</th>
+                            <th>Валюта</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTable">
+                        <!-- Транзакции добавляются динамически -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Подключение внешних библиотек -->
+    <!-- Скрипты -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.0.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.0.0/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.0.0/firebase-firestore-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- Подключение наших скриптов -->
     <script src="js_firebase.js"></script>
+    <script src="js_currency.js"></script>
     <script src="js_app.js"></script>
     <script src="js_ui.js"></script>
+
+    <!-- Мобильные функции -->
+    <script>
+    // Быстрое добавление через мобильную панель
+    function quickAddTransaction(type) {
+        document.getElementById('typeSelect').value = type;
+        updateCategoryOptions();
+        scrollToAddForm();
+        
+        // Фокус на сумме для быстрого ввода
+        setTimeout(() => {
+            document.getElementById('amountInput').focus();
+        }, 500);
+    }
+
+    // Быстрые кнопки для частых операций
+    function addQuickButtons() {
+        const quickActions = document.createElement('div');
+        quickActions.className = 'quick-actions';
+        quickActions.style.cssText = `
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        `;
+        
+        quickActions.innerHTML = `
+            <button class="quick-btn income" onclick="quickAddTransaction('income')" title="Быстрый доход">
+                💚
+            </button>
+            <button class="quick-btn expense" onclick="quickAddTransaction('expense')" title="Быстрый расход">
+                💸
+            </button>
+        `;
+        
+        // Стили для быстрых кнопок
+        const style = document.createElement('style');
+        style.textContent = `
+            .quick-btn {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                border: none;
+                font-size: 20px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                cursor: pointer;
+                transition: transform 0.2s ease;
+                background: white;
+            }
+            .quick-btn:hover {
+                transform: scale(1.1);
+            }
+            .quick-btn.income {
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+            }
+            .quick-btn.expense {
+                background: linear-gradient(135deg, #e74c3c, #c0392b);
+            }
+            
+            @media (max-width: 768px) {
+                .quick-actions {
+                    display: none; /* Скрываем на мобильных, используем thumb nav */
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        document.body.appendChild(quickActions);
+    }
+
+    // Улучшенная анимация для добавления транзакций
+    function animateTransactionAdd() {
+        const tableBody = document.getElementById('transactionTable');
+        const firstRow = tableBody.querySelector('tr:first-child');
+        
+        if (firstRow) {
+            firstRow.style.transform = 'translateX(-100%)';
+            firstRow.style.opacity = '0';
+            
+            requestAnimationFrame(() => {
+                firstRow.style.transition = 'all 0.5s ease';
+                firstRow.style.transform = 'translateX(0)';
+                firstRow.style.opacity = '1';
+            });
+            
+            // Мобильное уведомление
+            if (window.mobileEnhancements && window.mobileEnhancements.isMobileDevice()) {
+                window.mobileEnhancements.showToast('✅ Транзакция добавлена');
+                window.mobileEnhancements.addHapticFeedback();
+            }
+        }
+    }
+
+    // Pull-to-refresh для мобильных
+    function setupPullToRefresh() {
+        if (!window.mobileEnhancements || !window.mobileEnhancements.isMobileDevice()) return;
+        
+        let startY = 0;
+        let isPulling = false;
+        
+        document.addEventListener('touchstart', (e) => {
+            if (window.scrollY === 0) {
+                startY = e.touches[0].clientY;
+                isPulling = true;
+            }
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (!isPulling) return;
+            
+            const currentY = e.touches[0].clientY;
+            const pullDistance = currentY - startY;
+            
+            if (pullDistance > 100) {
+                showRefreshIndicator();
+            }
+        });
+        
+        document.addEventListener('touchend', (e) => {
+            if (isPulling) {
+                const currentY = e.changedTouches[0].clientY;
+                const pullDistance = currentY - startY;
+                
+                if (pullDistance > 100) {
+                    refreshData();
+                }
+                
+                hideRefreshIndicator();
+                isPulling = false;
+            }
+        });
+    }
+
+    function showRefreshIndicator() {
+        let indicator = document.querySelector('.refresh-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.className = 'refresh-indicator';
+            indicator.innerHTML = '🔄 Потяните для обновления';
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(52, 152, 219, 0.9);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 20px;
+                font-size: 14px;
+                z-index: 3000;
+                transition: opacity 0.3s ease;
+            `;
+            document.body.appendChild(indicator);
+        }
+        indicator.style.opacity = '1';
+    }
+
+    function hideRefreshIndicator() {
+        const indicator = document.querySelector('.refresh-indicator');
+        if (indicator) {
+            indicator.style.opacity = '0';
+            setTimeout(() => indicator.remove(), 300);
+        }
+    }
+
+    function refreshData() {
+        if (window.mobileEnhancements) {
+            window.mobileEnhancements.showToast('🔄 Обновление данных...');
+        }
+        
+        setTimeout(() => {
+            updateDisplay();
+            if (window.mobileEnhancements) {
+                window.mobileEnhancements.showToast('✅ Данные обновлены');
+                window.mobileEnhancements.addHapticFeedback();
+            }
+        }, 1000);
+    }
+
+    // Инициализация всех мобильных функций
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.mobileEnhancements && window.mobileEnhancements.isMobileDevice()) {
+            addQuickButtons();
+            setupPullToRefresh();
+            
+            // Переопределяем функцию добавления транзакции для анимации
+            const originalAddTransaction = window.addTransaction;
+            if (originalAddTransaction) {
+                window.addTransaction = function() {
+                    const result = originalAddTransaction.apply(this, arguments);
+                    animateTransactionAdd();
+                    return result;
+                };
+            }
+        }
+    });
+
+    // Service Worker для PWA функций
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('SW registered: ', registration);
+                })
+                .catch((registrationError) => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        });
+    }
+
+    // Обновляем CSS переменную для viewport height
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+    
+    // Слушатели для изменения ориентации
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }, 100);
+    });
+    </script>
 </body>
 </html>
