@@ -1,12 +1,12 @@
 // Firebase конфигурация
 // ВАЖНО: Замените эти значения на ваши настройки Firebase после создания проекта
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyCGGVVdO_6PWRzfZmVTF2seGYXvAnvXmRs",
+    authDomain: "finance-tracker-9ec6d.firebaseapp.com",
+    projectId: "finance-tracker-9ec6d",
+    storageBucket: "finance-tracker-9ec6d.firebasestorage.app",
+    messagingSenderId: "1008097998702",
+    appId: "1:1008097998702:web:5a93e734199d9bb98d737f"
 };
 
 // Глобальные переменные Firebase
