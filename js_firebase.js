@@ -1,5 +1,4 @@
 // Firebase конфигурация
-// ВАЖНО: Замените эти значения на ваши настройки Firebase после создания проекта
 const firebaseConfig = {
     apiKey: "AIzaSyCGGVVdO_6PWRzfZmVTF2seGYXvAnvXmRs",
     authDomain: "finance-tracker-9ec6d.firebaseapp.com",
@@ -9,220 +8,334 @@ const firebaseConfig = {
     appId: "1:1008097998702:web:5a93e734199d9bb98d737f"
 };
 
-// Глобальные переменные Firebase
-let auth = null;
-let db = null;
-let isFirebaseConfigured = false;
-
 // Инициализация Firebase
-async function initializeFirebase() {
-    // Проверяем, настроен ли Firebase
-    isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
-    
-    if (!isFirebaseConfigured) {
-        console.warn('Firebase не настроен. Работаем в локальном режиме.');
-        return false;
-    }
+let app, auth, db, googleProvider;
+let isFirebaseInitialized = false;
 
-    try {
-        // Динамический импорт Firebase модулей
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-        const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
-        const { getFirestore, doc, getDoc, setDoc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
-        
-        // Инициализация Firebase
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        
-        // Создаем провайдер Google
-        const provider = new GoogleAuthProvider();
-        
-        // Сохраняем функции в глобальных переменных для доступа из других файлов
-        window.firebaseAuth = {
-            signInWithPopup: (auth, provider) => signInWithPopup(auth, provider),
-            signOut: (auth) => signOut(auth),
-            onAuthStateChanged: (auth, callback) => onAuthStateChanged(auth, callback),
-            provider: provider
-        };
-        
-        window.firebaseFirestore = {
-            doc: (db, collection, docId) => doc(db, collection, docId),
-            getDoc: (docRef) => getDoc(docRef),
-            setDoc: (docRef, data) => setDoc(docRef, data),
-            onSnapshot: (docRef, callback) => onSnapshot(docRef, callback)
-        };
-        
-        // Слушаем изменения авторизации
-        onAuthStateChanged(auth, (user) => {
-            updateUserInterface(user);
-            if (user) {
-                loadUserData(user);
-            } else {
-                currentUser = null;
-                transactions = [];
-                updateDisplay();
-            }
-        });
-        
-        console.log('Firebase успешно инициализирован');
-        return true;
-        
-    } catch (error) {
-        console.error('Ошибка инициализации Firebase:', error);
-        return false;
-    }
+try {
+    console.log("Инициализация Firebase...");
+    
+    // Инициализируем Firebase
+    app = firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    
+    // Настройка Google провайдера с дополнительными параметрами
+    googleProvider = new firebase.auth.GoogleAuthProvider();
+    googleProvider.addScope('email');
+    googleProvider.addScope('profile');
+    
+    // Добавляем custom параметры для решения проблемы popup
+    googleProvider.setCustomParameters({
+        'prompt': 'select_account',
+        'display': 'popup'
+    });
+    
+    isFirebaseInitialized = true;
+    console.log("Firebase успешно инициализирован");
+    
+} catch (error) {
+    console.error("Ошибка инициализации Firebase:", error);
+    isFirebaseInitialized = false;
 }
 
-// Авторизация через Google
+// Улучшенная функция входа через Google
 async function signInWithGoogle() {
-    if (!isFirebaseConfigured) {
-        alert('Firebase не настроен. Приложение работает в локальном режиме.');
+    if (!isFirebaseInitialized) {
+        console.error("Firebase не инициализирован");
         return;
     }
-    
-    if (!auth || !window.firebaseAuth) {
-        alert('Firebase не инициализирован');
-        return;
-    }
-    
-    try {
-        const result = await window.firebaseAuth.signInWithPopup(auth, window.firebaseAuth.provider);
-        currentUser = result.user;
-        console.log('Пользователь авторизован:', currentUser.displayName);
-    } catch (error) {
-        console.error('Ошибка авторизации:', error);
-        alert('Ошибка авторизации: ' + error.message);
-    }
-}
 
-// Выход из аккаунта
-async function signOutUser() {
-    if (!auth || !window.firebaseAuth) return;
-    
     try {
-        await window.firebaseAuth.signOut(auth);
-        currentUser = null;
-        transactions = [];
-        console.log('Пользователь вышел из системы');
-    } catch (error) {
-        console.error('Ошибка выхода:', error);
-    }
-}
-
-// Загрузка данных пользователя из Firestore
-async function loadUserData(user) {
-    if (!db || !window.firebaseFirestore || !user) return;
-    
-    try {
-        updateSyncIndicator('syncing');
+        console.log("Попытка входа через Google...");
         
-        const userDoc = window.firebaseFirestore.doc(db, 'users', user.uid);
-        const docSnap = await window.firebaseFirestore.getDoc(userDoc);
-        
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            transactions = data.transactions || [];
-            updateDisplay();
-            console.log('Данные пользователя загружены из Firebase');
-        } else {
-            // Если документа нет, создаем его с текущими данными
-            console.log('Документ пользователя не найден, создаем новый');
-            await saveDataToFirebase();
+        // Проверяем возможность popup
+        if (typeof window !== 'undefined' && window.navigator.userAgent.includes('Instagram')) {
+            // Для Instagram и других встроенных браузеров используем redirect
+            await auth.signInWithRedirect(googleProvider);
+            return;
         }
         
-        // Настраиваем слушателя для синхронизации в реальном времени
-        window.firebaseFirestore.onSnapshot(userDoc, (doc) => {
-            if (doc.exists()) {
-                const data = doc.data();
-                const serverTransactions = data.transactions || [];
-                
-                // Обновляем только если данные действительно изменились
-                if (JSON.stringify(serverTransactions) !== JSON.stringify(transactions)) {
-                    transactions = serverTransactions;
-                    updateDisplay();
-                    console.log('Данные синхронизированы в реальном времени');
+        // Основной метод - popup
+        const result = await auth.signInWithPopup(googleProvider);
+        
+        const user = result.user;
+        console.log("Успешный вход:", user.displayName);
+        
+        // Обновляем UI
+        updateAuthUI(user);
+        
+        // Загружаем данные пользователя
+        await loadUserTransactions();
+        
+        return result;
+        
+    } catch (error) {
+        console.error("Ошибка авторизации:", error);
+        
+        // Улучшенная обработка ошибок
+        switch (error.code) {
+            case 'auth/popup-closed-by-user':
+                // Пробуем альтернативный метод
+                console.log("Popup закрыт, пробуем redirect...");
+                try {
+                    await auth.signInWithRedirect(googleProvider);
+                } catch (redirectError) {
+                    console.error("Ошибка redirect:", redirectError);
+                    showUserMessage("Ошибка входа. Попробуйте еще раз.", "error");
                 }
-            }
-        });
-        
-        updateSyncIndicator('online');
-        
-    } catch (error) {
-        console.error('Ошибка загрузки данных пользователя:', error);
-        updateSyncIndicator('offline');
+                break;
+                
+            case 'auth/popup-blocked':
+                console.log("Popup заблокирован, используем redirect...");
+                try {
+                    await auth.signInWithRedirect(googleProvider);
+                } catch (redirectError) {
+                    console.error("Ошибка redirect:", redirectError);
+                    showUserMessage("Разрешите всплывающие окна или обновите страницу", "error");
+                }
+                break;
+                
+            case 'auth/unauthorized-domain':
+                console.error("Домен не авторизован:", error.message);
+                showUserMessage("Ошибка конфигурации. Обратитесь к администратору.", "error");
+                break;
+                
+            default:
+                console.error("Неизвестная ошибка авторизации:", error);
+                showUserMessage("Ошибка входа: " + error.message, "error");
+        }
     }
 }
 
-// Сохранение данных в Firestore
-async function saveDataToFirebase() {
-    if (!db || !window.firebaseFirestore || !currentUser || !isOnline) {
-        return false;
-    }
+// Функция выхода
+async function signOutUser() {
+    if (!isFirebaseInitialized) return;
     
     try {
-        updateSyncIndicator('syncing');
+        await auth.signOut();
+        console.log("Пользователь вышел из системы");
         
-        const userDoc = window.firebaseFirestore.doc(db, 'users', currentUser.uid);
-        await window.firebaseFirestore.setDoc(userDoc, {
-            transactions: transactions,
-            lastUpdated: new Date().toISOString(),
-            userInfo: {
-                name: currentUser.displayName,
-                email: currentUser.email,
-                photoURL: currentUser.photoURL
-            }
-        });
+        // Обновляем UI
+        updateAuthUI(null);
         
-        updateSyncIndicator('online');
-        console.log('Данные сохранены в Firebase');
-        return true;
+        // Очищаем локальные данные
+        transactions = [];
+        updateDisplay();
         
     } catch (error) {
-        console.error('Ошибка сохранения в Firebase:', error);
-        updateSyncIndicator('offline');
-        return false;
+        console.error("Ошибка выхода:", error);
+        showUserMessage("Ошибка выхода: " + error.message, "error");
     }
 }
 
-// Синхронизация данных при восстановлении соединения
-async function syncDataAfterReconnect() {
-    if (!db || !window.firebaseFirestore || !currentUser || !isOnline) return;
+// Обработка результата redirect (если был использован)
+auth.getRedirectResult().then((result) => {
+    if (result.user) {
+        console.log("Успешный вход через redirect:", result.user.displayName);
+        updateAuthUI(result.user);
+        loadUserTransactions();
+    }
+}).catch((error) => {
+    console.error("Ошибка redirect result:", error);
+});
+
+// Слушатель изменения состояния авторизации
+auth.onAuthStateChanged((user) => {
+    console.log("Изменение состояния авторизации:", user ? user.displayName : "не авторизован");
+    updateAuthUI(user);
     
-    try {
-        console.log('Начинаем синхронизацию после восстановления соединения...');
+    if (user) {
+        loadUserTransactions();
+    } else {
+        // Пользователь не авторизован
+        transactions = [];
+        updateDisplay();
+    }
+});
+
+// Обновление UI авторизации
+function updateAuthUI(user) {
+    const loginBtn = document.getElementById('loginBtn');
+    const userInfo = document.getElementById('userInfo');
+    const userName = document.getElementById('userName');
+    const userPhoto = document.getElementById('userPhoto');
+    
+    if (user) {
+        // Пользователь авторизован
+        loginBtn.style.display = 'none';
+        userInfo.style.display = 'flex';
+        userName.textContent = user.displayName || user.email;
         
-        // Получаем локальные данные
-        const localData = localStorage.getItem('financeTransactions');
-        const localTransactions = localData ? JSON.parse(localData) : [];
-        
-        // Получаем данные с сервера
-        const userDoc = window.firebaseFirestore.doc(db, 'users', currentUser.uid);
-        const docSnap = await window.firebaseFirestore.getDoc(userDoc);
-        
-        if (docSnap.exists()) {
-            const serverData = docSnap.data();
-            const serverTransactions = serverData.transactions || [];
-            
-            // Простое слияние: используем данные с большим количеством транзакций
-            // В реальном приложении здесь была бы более сложная логика слияния
-            if (localTransactions.length >= serverTransactions.length) {
-                transactions = localTransactions;
-                await saveDataToFirebase();
-                console.log('Загружены локальные данные в Firebase');
-            } else {
-                transactions = serverTransactions;
-                updateDisplay();
-                console.log('Загружены данные с Firebase');
-            }
+        if (user.photoURL) {
+            userPhoto.src = user.photoURL;
+            userPhoto.style.display = 'block';
         } else {
-            // Сервер пустой, загружаем локальные данные
-            transactions = localTransactions;
-            await saveDataToFirebase();
-            console.log('Созданы новые данные в Firebase');
+            userPhoto.style.display = 'none';
         }
         
-    } catch (error) {
-        console.error('Ошибка синхронизации:', error);
+        updateSyncStatus("✅ Синхронизировано");
+    } else {
+        // Пользователь не авторизован
+        loginBtn.style.display = 'block';
+        userInfo.style.display = 'none';
+        updateSyncStatus("❌ Не авторизован");
     }
 }
+
+// Функция отображения сообщений пользователю
+function showUserMessage(message, type = 'info') {
+    // Создаем уведомление
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        z-index: 10000;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    `;
+    
+    // Цвет в зависимости от типа
+    switch (type) {
+        case 'error':
+            notification.style.background = '#e74c3c';
+            break;
+        case 'success':
+            notification.style.background = '#27ae60';
+            break;
+        default:
+            notification.style.background = '#3498db';
+    }
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Удаляем через 5 секунд
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+// Функции для работы с Firestore
+async function saveTransactionToFirestore(transaction) {
+    if (!isFirebaseInitialized || !auth.currentUser) {
+        console.log("Пользователь не авторизован, сохраняем локально");
+        return false;
+    }
+    
+    try {
+        const userCollection = db.collection('users').doc(auth.currentUser.uid).collection('transactions');
+        await userCollection.add({
+            ...transaction,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        updateSyncStatus("✅ Синхронизировано");
+        return true;
+    } catch (error) {
+        console.error("Ошибка сохранения в Firestore:", error);
+        updateSyncStatus("⚠️ Ошибка синхронизации");
+        return false;
+    }
+}
+
+async function loadUserTransactions() {
+    if (!isFirebaseInitialized || !auth.currentUser) {
+        console.log("Пользователь не авторизован");
+        return;
+    }
+    
+    try {
+        updateSyncStatus("🔄 Загрузка данных...");
+        
+        const userCollection = db.collection('users').doc(auth.currentUser.uid).collection('transactions');
+        const snapshot = await userCollection.orderBy('date', 'desc').get();
+        
+        const cloudTransactions = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            cloudTransactions.push({
+                id: doc.id,
+                ...data
+            });
+        });
+        
+        console.log(`Загружено ${cloudTransactions.length} транзакций из облака`);
+        
+        // Мерджим с локальными данными
+        mergeTransactions(cloudTransactions);
+        updateDisplay();
+        updateSyncStatus("✅ Синхронизировано");
+        
+    } catch (error) {
+        console.error("Ошибка загрузки данных:", error);
+        updateSyncStatus("⚠️ Ошибка загрузки");
+    }
+}
+
+async function deleteTransactionFromFirestore(transactionId) {
+    if (!isFirebaseInitialized || !auth.currentUser || !transactionId) {
+        return false;
+    }
+    
+    try {
+        const userCollection = db.collection('users').doc(auth.currentUser.uid).collection('transactions');
+        await userCollection.doc(transactionId).delete();
+        
+        updateSyncStatus("✅ Синхронизировано");
+        return true;
+    } catch (error) {
+        console.error("Ошибка удаления из Firestore:", error);
+        updateSyncStatus("⚠️ Ошибка синхронизации");
+        return false;
+    }
+}
+
+// Функция обновления статуса синхронизации
+function updateSyncStatus(status) {
+    const syncStatusElement = document.getElementById('syncStatus');
+    if (syncStatusElement) {
+        syncStatusElement.textContent = status;
+    }
+}
+
+// Функция мерджинга транзакций
+function mergeTransactions(cloudTransactions) {
+    if (cloudTransactions.length === 0) return;
+    
+    // Если локальных транзакций нет, используем облачные
+    if (!transactions || transactions.length === 0) {
+        transactions = cloudTransactions;
+        return;
+    }
+    
+    // Мерджим данные (приоритет у облачных)
+    const mergedMap = new Map();
+    
+    // Добавляем локальные
+    transactions.forEach(t => {
+        if (!t.id) t.id = generateId();
+        mergedMap.set(t.id, t);
+    });
+    
+    // Добавляем/обновляем облачными
+    cloudTransactions.forEach(t => {
+        mergedMap.set(t.id, t);
+    });
+    
+    transactions = Array.from(mergedMap.values());
+}
+
+// Вспомогательная функция генерации ID
+function generateId() {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+}
+
+console.log("Firebase модуль загружен");
