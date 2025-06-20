@@ -406,3 +406,324 @@ tr:hover {
         text-align: center;
     }
 }
+
+/* ДОПОЛНЕНИЯ К СУЩЕСТВУЮЩЕМУ CSS ДЛЯ МОБИЛЬНЫХ УЛУЧШЕНИЙ */
+
+/* Улучшенные мобильные переменные */
+:root {
+    --mobile-touch-target: 48px; /* Минимальный размер для касания */
+    --mobile-spacing: 12px;
+    --mobile-safe-area: 20px; /* Безопасная зона от краев */
+    --thumb-zone-height: 180px; /* Зона досягаемости большого пальца */
+}
+
+/* Thumb-friendly навигация - одна из главных тенденций 2025 */
+.mobile-thumb-nav {
+    position: fixed;
+    bottom: var(--mobile-safe-area);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    padding: 8px 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    display: none; /* Показываем только на мобильных */
+    z-index: 1000;
+}
+
+/* Улучшенные кнопки для касания пальцем */
+.btn {
+    min-height: var(--mobile-touch-target);
+    min-width: var(--mobile-touch-target);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Анимация нажатия (Micro-interactions тренд 2025) */
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.btn:active::before {
+    width: 200px;
+    height: 200px;
+}
+
+/* Улучшенные input поля для мобильных */
+.input-group input, 
+.input-group select {
+    font-size: 16px; /* Предотвращает zoom на iOS */
+    min-height: var(--mobile-touch-target);
+    border-radius: 12px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Стилизация для iOS */
+.input-group input[type="date"],
+.input-group input[type="number"] {
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+/* Dark mode support - тренд 2025 */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #ffffff;
+    }
+    
+    .container {
+        background: #2d3748;
+        color: #ffffff;
+    }
+    
+    .summary-card,
+    .category-item {
+        background: #4a5568;
+        color: #ffffff;
+    }
+    
+    th, td {
+        border-bottom-color: #4a5568;
+    }
+    
+    .input-group input,
+    .input-group select {
+        background: #4a5568;
+        border-color: #718096;
+        color: #ffffff;
+    }
+}
+
+/* Улучшенная адаптивность для разных размеров экранов */
+@media (max-width: 480px) {
+    /* Экстра-маленькие телефоны */
+    .header h1 {
+        font-size: 1.8em;
+    }
+    
+    .controls {
+        gap: 15px;
+    }
+    
+    .input-group {
+        width: 100%;
+    }
+    
+    /* Показываем thumb navigation */
+    .mobile-thumb-nav {
+        display: flex;
+        gap: 10px;
+    }
+    
+    /* Скрываем обычную навигацию */
+    .controls {
+        margin-bottom: 100px; /* Место для thumb nav */
+    }
+    
+    /* Компактная форма обмена валют */
+    .exchange-form {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .exchange-arrow {
+        font-size: 1.5em;
+        transform: rotate(90deg);
+        margin: 10px 0;
+    }
+}
+
+@media (max-width: 390px) {
+    /* iPhone 14/15 Pro и подобные */
+    .container {
+        margin: 10px;
+        border-radius: 20px;
+    }
+    
+    .header {
+        padding: 20px 15px;
+    }
+    
+    .content {
+        padding: 20px 15px;
+    }
+    
+    /* Более компактная таблица */
+    table {
+        font-size: 14px;
+    }
+    
+    th, td {
+        padding: 10px 8px;
+    }
+    
+    /* Скрываем некоторые колонки на очень маленьких экранах */
+    .table-container .hide-on-small {
+        display: none;
+    }
+}
+
+/* Landscape режим для телефонов */
+@media (max-width: 896px) and (orientation: landscape) {
+    .header {
+        padding: 15px 30px;
+    }
+    
+    .header h1 {
+        font-size: 2em;
+    }
+    
+    .controls {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .exchange-form {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .exchange-arrow {
+        transform: none;
+        align-self: end;
+        margin-bottom: 15px;
+    }
+}
+
+/* Улучшения для планшетов */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .controls {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    
+    .summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .exchange-form {
+        grid-template-columns: repeat(4, 1fr);
+        align-items: end;
+    }
+}
+
+/* Swipe gestures indicators */
+.swipe-indicator {
+    position: relative;
+}
+
+.swipe-indicator::after {
+    content: '← Swipe →';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #94a3b8;
+    opacity: 0;
+    animation: swipeHint 3s ease-in-out infinite;
+}
+
+@keyframes swipeHint {
+    0%, 90%, 100% { opacity: 0; }
+    45% { opacity: 1; }
+}
+
+/* Пользовательские скроллбары */
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Модальные окна для мобильных */
+.mobile-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: none;
+    align-items: flex-end;
+}
+
+.mobile-modal-content {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.mobile-modal.active .mobile-modal-content {
+    transform: translateY(0);
+}
+
+/* Haptic feedback simulation через анимации */
+.haptic-feedback {
+    animation: hapticTap 0.1s ease;
+}
+
+@keyframes hapticTap {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus indicators для клавиатурной навигации */
+.btn:focus,
+.input-group input:focus,
+.input-group select:focus {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Safe area support для новых iPhone */
+@supports (padding: max(0px)) {
+    .container {
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+    }
+    
+    .mobile-thumb-nav {
+        bottom: max(var(--mobile-safe-area), env(safe-area-inset-bottom));
+    }
+}
