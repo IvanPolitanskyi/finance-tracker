@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учет доходов и расходов</title>
+    <link rel="stylesheet" href="css_styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Учет финансов</h1>
+            <div class="auth-section">
+                <div class="user-info" id="userInfo">
+                    <button class="auth-btn" onclick="signInWithGoogle()">
+                        🔐 Войти через Google
+                    </button>
+                </div>
+                <div class="sync-indicator sync-offline" id="syncIndicator">
+                    ⚠️ Оффлайн режим
+                </div>
+            </div>
+            <div class="month-selector">
+                <select id="monthSelect">
+                    <option value="0">Январь 2025</option>
+                    <option value="1">Февраль 2025</option>
+                    <option value="2">Март 2025</option>
+                    <option value="3">Апрель 2025</option>
+                    <option value="4">Май 2025</option>
+                    <option value="5">Июнь 2025</option>
+                    <option value="6">Июль 2025</option>
+                    <option value="7">Август 2025</option>
+                    <option value="8">Сентябрь 2025</option>
+                    <option value="9">Октябрь 2025</option>
+                    <option value="10">Ноябрь 2025</option>
+                    <option value="11">Декабрь 2025</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div id="loadingSection" class="loading">
+                <div class="loading-spinner"></div>
+                <p>Загрузка приложения...</p>
+            </div>
+            
+            <div id="appContent" style="display: none;">
+                <!-- Форма добавления транзакций -->
+                <div class="controls">
+                    <div class="input-group">
+                        <label>Дата</label>
+                        <input type="date" id="dateInput">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Тип</label>
+                        <select id="typeSelect">
+                            <option value="income">Доход</option>
+                            <option value="expense">Расход</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Категория</label>
+                        <select id="categorySelect">
+                            <!-- Заполняется динамически -->
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Сумма</label>
+                        <input type="number" id="amountInput" placeholder="0.00" step="0.01">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Валюта</label>
+                        <select id="currencySelect">
+                            <option value="MDL">MDL</option>
+                            <option value="UAH">UAH</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="USDT">USDT</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Описание</label>
+                        <input type="text" id="descriptionInput" placeholder="Описание...">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-add" onclick="addTransaction()">Добавить</button>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-export" onclick="exportToExcel()">Экспорт в Excel</button>
+                    </div>
+                </div>
+                
+                <!-- Секция обмена валют -->
+                <div class="exchange-section">
+                    <h3>💱 Обмен валют</h3>
+                    <div class="exchange-form">
+                        <div class="input-group">
+                            <label>Дата обмена</label>
+                            <input type="date" id="exchangeDateInput">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Отдаете</label>
+                            <input type="number" id="fromAmountInput" placeholder="0.00" step="0.01">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Валюта</label>
+                            <select id="fromCurrencySelect">
+                                <option value="MDL">MDL</option>
+                                <option value="UAH">UAH</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="USDT">USDT</option>
+                            </select>
+                        </div>
+                        
+                        <div class="exchange-arrow">→</div>
+                        
+                        <div class="input-group">
+                            <label>Получаете</label>
+                            <input type="number" id="toAmountInput" placeholder="0.00" step="0.01">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Валюта</label>
+                            <select id="toCurrencySelect">
+                                <option value="MDL">MDL</option>
+                                <option value="UAH">UAH</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="USDT">USDT</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Комиссия</label>
+                            <input type="number" id="feeInput" placeholder="0.00" step="0.01" value="0">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Валюта комиссии</label>
+                            <select id="feeCurrencySelect">
+                                <option value="MDL">MDL</option>
+                                <option value="UAH">UAH</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="USDT">USDT</option>
+                            </select>
+                        </div>
+                        
+                        <div class="rate-display" id="rateDisplay">
+                            Курс: -
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>&nbsp;</label>
+                            <button class="btn btn-add" onclick="addExchange()">Обменять</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Сводка по валютам -->
+                <div class="summary" id="summaryContainer"></div>
+                
+                <!-- Таблица транзакций -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Тип</th>
+                                <th>Категория</th>
+                                <th>Описание</th>
+                                <th>Сумма</th>
+                                <th>Валюта</th>
+                                <th>Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTable">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Разбивка по категориям -->
+                <div id="categoryBreakdown" class="categories"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключение внешних библиотек -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Подключение наших скриптов -->
+    <script src="js_firebase.js"></script>
+    <script src="js_app.js"></script>
+    <script src="js_ui.js"></script>
+</body>
+</html>
