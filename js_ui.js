@@ -276,3 +276,331 @@ function animateNewTransaction() {
         }, 1000);
     }
 }
+
+// ДОПОЛНЕНИЯ К ui.js ДЛЯ МОБИЛЬНЫХ УЛУЧШЕНИЙ
+
+// Мобильные функции - добавить в конец ui.js
+
+// Детекция мобильного устройства
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           window.innerWidth <= 768;
+}
+
+// Инициализация мобильных улучшений
+function initMobileEnhancements() {
+    if (isMobileDevice()) {
+        setupThumbNavigation();
+        setupMobileOptimizations();
+        setupTouchGestures();
+        setupHapticFeedback();
+        setupMobileModals();
+    }
+}
+
+// Создание thumb-friendly навигации внизу экрана
+function setupThumbNavigation() {
+    const thumbNav = document.createElement('div');
+    thumbNav.className = 'mobile-thumb-nav';
+    thumbNav.innerHTML = `
+        <button class="btn btn-add" onclick="scrollToAddForm()" title="Добавить">
+            ➕
+        </button>
+        <button class="btn btn-export" onclick="exportToExcel()" title="Экспорт">
+            📊
+        </button>
+        <button class="btn" onclick="scrollToTop()" title="Наверх">
+            ⬆️
+        </button>
+        <button class="btn" onclick="toggleMobileSummary()" title="Статистика">
+            💰
+        </button>
+    `;
+    document.body.appendChild(thumbNav);
+}
+
+// Плавная прокрутка к форме добавления
+function scrollToAddForm() {
+    document.querySelector('.controls').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+    });
+    addHapticFeedback();
+}
+
+// Прокрутка наверх
+function scrollToTop() {
+    window.scrollTo({ 
+        top: 0, 
+        behavior: 'smooth' 
+    });
+    addHapticFeedback();
+}
+
+// Показ/скрытие мобильной сводки
+function toggleMobileSummary() {
+    const summary = document.querySelector('.summary');
+    if (summary.style.display === 'none') {
+        summary.style.display = 'grid';
+        summary.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        summary.style.display = 'none';
+    }
+    addHapticFeedback();
+}
+
+// Настройка мобильных оптимизаций
+function setupMobileOptimizations() {
+    // Предотвращение zoom при фокусе на input
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        if (input.type !== 'date' && input.type !== 'number') {
+            input.style.fontSize = '16px';
+        }
+    });
+    
+    // Автозакрытие мобильной клавиатуры при скролле
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        if (scrollTop > lastScrollTop + 50) {
+            // Скролл вниз - скрываем клавиатуру
+            document.activeElement.blur();
+        }
+        lastScrollTop = scrollTop;
+    }, { passive: true });
+    
+    // Улучшенное отображение таблицы на мобильных
+    optimizeMobileTable();
+}
+
+// Оптимизация таблицы для мобильных
+function optimizeMobileTable() {
+    const table = document.querySelector('table');
+    if (!table) return;
+    
+    // Добавляем классы для скрытия колонок на маленьких экранах
+    const headers = table.querySelectorAll('th');
+    const cells = table.querySelectorAll('td');
+    
+    if (window.innerWidth <= 390) {
+        // Скрываем описание на очень маленьких экранах
+        if (headers[3]) headers[3].classList.add('hide-on-small');
+        cells.forEach((cell, index) => {
+            if ((index + 1) % 7 === 4) { // Каждая 4-я колонка (описание)
+                cell.classList.add('hide-on-small');
+            }
+        });
+    }
+    
+    // Добавляем горизонтальный скролл с индикатором
+    const tableContainer = document.querySelector('.table-container');
+    if (tableContainer && !tableContainer.querySelector('.swipe-indicator')) {
+        tableContainer.classList.add('swipe-indicator');
+    }
+}
+
+// Настройка touch жестов
+function setupTouchGestures() {
+    let startX, startY, currentX, currentY;
+    
+    // Swipe для навигации между месяцами
+    const monthSelect = document.getElementById('monthSelect');
+    
+    document.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    document.addEventListener('touchmove', (e) => {
+        if (!startX || !startY) return;
+        
+        currentX = e.touches[0].clientX;
+        currentY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    document.addEventListener('touchend', (e) => {
+        if (!startX || !startY) return;
+        
+        const diffX = startX - currentX;
+        const diffY = startY - currentY;
+        
+        // Горизонтальный swipe для смены месяца
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+            if (diffX > 0) {
+                // Swipe влево - следующий месяц
+                changeMonth(1);
+            } else {
+                // Swipe вправо - предыдущий месяц
+                changeMonth(-1);
+            }
+        }
+        
+        // Сброс значений
+        startX = startY = currentX = currentY = null;
+    }, { passive: true });
+}
+
+// Смена месяца через swipe
+function changeMonth(direction) {
+    const monthSelect = document.getElementById('monthSelect');
+    const currentMonth = parseInt(monthSelect.value);
+    let newMonth = currentMonth + direction;
+    
+    // Ограничиваем диапазон (0-11)
+    if (newMonth < 0) newMonth = 11;
+    if (newMonth > 11) newMonth = 0;
+    
+    monthSelect.value = newMonth;
+    monthSelect.dispatchEvent(new Event('change'));
+    
+    // Показываем уведомление о смене месяца
+    showMobileToast(`Переключено на ${getMonthName(newMonth)}`);
+    addHapticFeedback();
+}
+
+// Мобильные уведомления (toast)
+function showMobileToast(message, duration = 2000) {
+    // Удаляем предыдущий toast если есть
+    const existingToast = document.querySelector('.mobile-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = 'mobile-toast';
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        z-index: 3000;
+        backdrop-filter: blur(10px);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Анимация появления
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+    });
+    
+    // Удаление через указанное время
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// Имитация haptic feedback
+function setupHapticFeedback() {
+    // Добавляем haptic feedback ко всем кнопкам
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(button => {
+        button.addEventListener('click', addHapticFeedback);
+    });
+}
+
+function addHapticFeedback() {
+    // Попытка использовать реальный haptic feedback если доступен
+    if (navigator.vibrate) {
+        navigator.vibrate(10); // Короткая вибрация
+    }
+    
+    // Визуальная имитация haptic feedback
+    event.target.classList.add('haptic-feedback');
+    setTimeout(() => {
+        event.target.classList.remove('haptic-feedback');
+    }, 100);
+}
+
+// Настройка мобильных модальных окон
+function setupMobileModals() {
+    // Можно использовать для полноэкранного редактирования транзакций
+}
+
+// Адаптивное изменение размера при повороте экрана
+function handleOrientationChange() {
+    setTimeout(() => {
+        optimizeMobileTable();
+        
+        // Обновляем viewport height для мобильных браузеров
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }, 100);
+}
+
+// Улучшенная функция валидации для мобильных
+function validateMobileForm() {
+    const errors = [];
+    
+    // Проверяем обязательные поля
+    const date = document.getElementById('dateInput').value;
+    const amount = parseFloat(document.getElementById('amountInput').value);
+    
+    if (!date) {
+        errors.push('📅 Выберите дату');
+    }
+    
+    if (!amount || amount <= 0) {
+        errors.push('💰 Введите корректную сумму');
+    }
+    
+    if (errors.length > 0) {
+        showMobileToast(errors.join(', '), 3000);
+        addHapticFeedback();
+        return false;
+    }
+    
+    return true;
+}
+
+// Оптимизация производительности для мобильных
+function optimizeMobilePerformance() {
+    // Lazy loading для больших списков транзакций
+    if (transactions.length > 50) {
+        implementVirtualScrolling();
+    }
+    
+    // Debounce для поиска и фильтрации
+    const searchInput = document.querySelector('#searchInput');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterTransactions(e.target.value);
+            }, 300);
+        });
+    }
+}
+
+// Инициализация всех мобильных улучшений
+document.addEventListener('DOMContentLoaded', () => {
+    if (isMobileDevice()) {
+        initMobileEnhancements();
+        
+        // Слушатели для изменения ориентации
+        window.addEventListener('orientationchange', handleOrientationChange);
+        window.addEventListener('resize', handleOrientationChange);
+        
+        // Обновляем CSS переменную для viewport height
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+});
+
+// Экспорт функций для использования в других файлах
+window.mobileEnhancements = {
+    showToast: showMobileToast,
+    addHapticFeedback: addHapticFeedback,
+    isMobileDevice: isMobileDevice
+};
