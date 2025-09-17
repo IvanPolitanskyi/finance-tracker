@@ -4,28 +4,37 @@ let currentMonth = new Date().getMonth();
 let currentUser = null;
 let isOnline = navigator.onLine;
 
-// Категории доходов и расходов
+// Категории доходов и расходов (ваши оригинальные)
 const categories = {
     income: {
-        initial: 'Начальный баланс',
-        salary: 'Зарплата',
-        crypto: 'Крипта',
-        gift: 'Подарили',
-        additional: 'Доп генерация',
-        exchange: 'Обмен валют'
+        initial: { name: 'Начальный баланс', icon: '💰' },
+        salary: { name: 'Зарплата', icon: '💼' },
+        crypto: { name: 'Крипта', icon: '₿' },
+        gift: { name: 'Подарили', icon: '🎁' },
+        additional: { name: 'Доп генерация', icon: '💡' },
+        exchange: { name: 'Обмен валют', icon: '💱' }
     },
     expense: {
-        food: 'Продукты',
-        transport: 'Транспорт',
-        utilities: 'Коммунальные услуги',
-        rent: 'Аренда',
-        restaurant: 'Кафе/Рестораны',
-        clothes: 'Одежда',
-        online: 'Заказы в интернете',
-        pharmacy: 'Аптека',
-        exchange: 'Обмен валют',
-        other: 'Прочее'
+        food: { name: 'Продукты', icon: '🛒' },
+        transport: { name: 'Транспорт', icon: '🚗' },
+        utilities: { name: 'Коммунальные услуги', icon: '🏠' },
+        rent: { name: 'Аренда', icon: '🏘️' },
+        restaurant: { name: 'Кафе/Рестораны', icon: '🍽️' },
+        clothes: { name: 'Одежда', icon: '👕' },
+        online: { name: 'Заказы в интернете', icon: '📦' },
+        pharmacy: { name: 'Аптека', icon: '💊' },
+        exchange: { name: 'Обмен валют', icon: '💱' },
+        other: { name: 'Прочее', icon: '💸' }
     }
+};
+
+// Валюты (ваши оригинальные)
+const currencies = {
+    MDL: { symbol: 'MDL', rate: 1 },
+    UAH: { symbol: 'UAH', rate: 0.5 },
+    USD: { symbol: '$', rate: 18 },
+    EUR: { symbol: '€', rate: 20 },
+    USDT: { symbol: 'USDT', rate: 18 }
 };
 
 // Инициализация приложения
@@ -59,10 +68,15 @@ function setupEventListeners() {
     });
     
     // Обработчики для обмена валют
-    document.getElementById('fromAmountInput').addEventListener('input', calculateExchangeRate);
-    document.getElementById('toAmountInput').addEventListener('input', calculateExchangeRate);
-    document.getElementById('fromCurrencySelect').addEventListener('change', calculateExchangeRate);
-    document.getElementById('toCurrencySelect').addEventListener('change', calculateExchangeRate);
+    const fromAmountInput = document.getElementById('fromAmountInput');
+    const toAmountInput = document.getElementById('toAmountInput');
+    const fromCurrencySelect = document.getElementById('fromCurrencySelect');
+    const toCurrencySelect = document.getElementById('toCurrencySelect');
+    
+    if (fromAmountInput) fromAmountInput.addEventListener('input', calculateExchangeRate);
+    if (toAmountInput) toAmountInput.addEventListener('input', calculateExchangeRate);
+    if (fromCurrencySelect) fromCurrencySelect.addEventListener('change', calculateExchangeRate);
+    if (toCurrencySelect) toCurrencySelect.addEventListener('change', calculateExchangeRate);
     
     // Обработчики для онлайн/оффлайн режима
     window.addEventListener('online', () => {
@@ -77,6 +91,14 @@ function setupEventListeners() {
         isOnline = false;
         updateSyncIndicator('offline');
     });
+    
+    // Закрытие модального окна при клике вне его
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('transaction-modal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
 }
 
 // Инициализация UI элементов
@@ -84,7 +106,11 @@ function initializeUI() {
     // Устанавливаем текущую дату
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('dateInput').value = today;
-    document.getElementById('exchangeDateInput').value = today;
+    
+    const exchangeDateInput = document.getElementById('exchangeDateInput');
+    if (exchangeDateInput) {
+        exchangeDateInput.value = today;
+    }
     
     // Устанавливаем текущий месяц
     document.getElementById('monthSelect').value = currentMonth;
@@ -97,10 +123,32 @@ function initializeUI() {
     
     // Обновляем индикатор синхронизации
     updateSyncIndicator('offline');
+}
+
+// Навигация по страницам
+function showPage(pageId) {
+    // Убираем активный класс у всех страниц и навигации
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     
-    // Скрываем загрузку и показываем приложение
-    document.getElementById('loadingSection').style.display = 'none';
-    document.getElementById('appContent').style.display = 'block';
+    // Активируем нужную страницу
+    document.getElementById(pageId).classList.add('active');
+    event.target.closest('.nav-item').classList.add('active');
+    
+    // Обновляем заголовок
+    const titles = {
+        dashboard: 'Дашборд',
+        transactions: 'Транзакции',
+        exchange: 'Обмен валют',
+        categories: 'Категории',
+        analytics: 'Аналитика'
+    };
+    document.getElementById('page-title').textContent = titles[pageId];
+    
+    // Обновляем содержимое в зависимости от страницы
+    if (pageId === 'categories') {
+        updateCategoriesPage();
+    }
 }
 
 // Обновление опций категорий в зависимости от типа операции
@@ -113,13 +161,31 @@ function updateCategoryOptions() {
     for (let key in categoryList) {
         const option = document.createElement('option');
         option.value = key;
-        option.textContent = categoryList[key];
+        option.textContent = `${categoryList[key].icon} ${categoryList[key].name}`;
         categorySelect.appendChild(option);
     }
 }
 
+// Модальные окна
+function openAddTransactionModal(type = 'expense') {
+    document.getElementById('typeSelect').value = type;
+    updateCategoryOptions();
+    document.getElementById('transaction-modal').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('transaction-modal').classList.remove('active');
+    document.getElementById('transaction-form').reset();
+    
+    // Сбрасываем дату на сегодня
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateInput').value = today;
+}
+
 // Добавление новой транзакции
-function addTransaction() {
+function addTransaction(event) {
+    event.preventDefault();
+    
     const date = document.getElementById('dateInput').value;
     const type = document.getElementById('typeSelect').value;
     const category = document.getElementById('categorySelect').value;
@@ -142,26 +208,25 @@ function addTransaction() {
         amount: amount,
         currency: currency,
         description: description,
-        month: new Date(date).getMonth()
+        month: new Date(date).getMonth(),
+        timestamp: new Date().toISOString()
     };
     
     // Добавляем транзакцию
     transactions.push(transaction);
     
-    // Очищаем форму
-    clearTransactionForm();
-    
     // Обновляем отображение и сохраняем данные
     updateDisplay();
     saveData();
+    closeModal();
     
     console.log('Добавлена транзакция:', transaction);
 }
 
-// Очистка формы добавления транзакции
-function clearTransactionForm() {
-    document.getElementById('amountInput').value = '';
-    document.getElementById('descriptionInput').value = '';
+// Функция для изменения месяца
+function onMonthChange() {
+    currentMonth = parseInt(document.getElementById('monthSelect').value);
+    updateDisplay();
 }
 
 // Удаление транзакции
@@ -224,7 +289,8 @@ function addExchange() {
         amount: fromAmount,
         currency: fromCurrency,
         description: exchangeDescription,
-        month: new Date(date).getMonth()
+        month: new Date(date).getMonth(),
+        timestamp: new Date().toISOString()
     };
     
     // Создаем транзакцию дохода (получаем валюту)
@@ -236,7 +302,8 @@ function addExchange() {
         amount: toAmount,
         currency: toCurrency,
         description: exchangeDescription,
-        month: new Date(date).getMonth()
+        month: new Date(date).getMonth(),
+        timestamp: new Date().toISOString()
     };
     
     transactions.push(expenseTransaction);
@@ -252,7 +319,8 @@ function addExchange() {
             amount: fee,
             currency: feeCurrency,
             description: `Комиссия за обмен ${fromCurrency}→${toCurrency}`,
-            month: new Date(date).getMonth()
+            month: new Date(date).getMonth(),
+            timestamp: new Date().toISOString()
         };
         transactions.push(feeTransaction);
     }
@@ -278,13 +346,26 @@ function clearExchangeForm() {
     document.getElementById('rateDisplay').textContent = 'Курс: -';
 }
 
+// Фильтрация транзакций
+function filterTransactions() {
+    const filterValue = document.getElementById('typeFilter').value;
+    let filteredTransactions = transactions;
+    
+    if (filterValue !== 'all') {
+        filteredTransactions = transactions.filter(t => t.type === filterValue);
+    }
+    
+    filteredTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    displayTransactionsTable(filteredTransactions);
+}
+
 // Сохранение данных (локально и в Firebase)
 async function saveData() {
     // Всегда сохраняем локально
     localStorage.setItem('financeTransactions', JSON.stringify(transactions));
     
     // Сохраняем в Firebase если доступно
-    if (isFirebaseConfigured && currentUser && isOnline) {
+    if (typeof isFirebaseConfigured !== 'undefined' && isFirebaseConfigured && currentUser && isOnline) {
         await saveDataToFirebase();
     }
 }
@@ -320,7 +401,7 @@ function exportToExcel() {
     const data = monthTransactions.map(t => ({
         'Дата': new Date(t.date).toLocaleDateString('ru-RU'),
         'Тип': t.type === 'income' ? 'Доход' : 'Расход',
-        'Категория': categories[t.type][t.category],
+        'Категория': categories[t.type][t.category].name,
         'Описание': t.description,
         'Сумма': t.amount,
         'Валюта': t.currency
