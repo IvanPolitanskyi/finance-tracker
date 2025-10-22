@@ -2,7 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
     <title>Учет доходов и расходов</title>
     <link rel="stylesheet" href="css_styles.css">
 </head>
@@ -289,9 +292,34 @@
         </div>
     </div>
 
+    <!-- Мобильная нижняя навигация -->
+    <div class="mobile-nav">
+        <div class="mobile-nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
+            <span class="mobile-nav-icon">📊</span>
+            <span class="mobile-nav-label">Главная</span>
+        </div>
+        <div class="mobile-nav-item" onclick="showPage('transactions')" data-page="transactions">
+            <span class="mobile-nav-icon">💳</span>
+            <span class="mobile-nav-label">История</span>
+        </div>
+        <div class="mobile-nav-item nav-center" onclick="showPage('exchange')" data-page="exchange">
+            <div class="mobile-nav-center-btn">
+                <span class="mobile-nav-icon">💱</span>
+            </div>
+        </div>
+        <div class="mobile-nav-item" onclick="showPage('categories')" data-page="categories">
+            <span class="mobile-nav-icon">📂</span>
+            <span class="mobile-nav-label">Категории</span>
+        </div>
+        <div class="mobile-nav-item" onclick="showPage('analytics')" data-page="analytics">
+            <span class="mobile-nav-icon">📈</span>
+            <span class="mobile-nav-label">Аналитика</span>
+        </div>
+    </div>
+
     <!-- Подключение внешних библиотек -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
+
     <!-- Подключение наших скриптов -->
     <script src="js_firebase.js"></script>
     <script src="js_app.js"></script>

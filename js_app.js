@@ -125,17 +125,26 @@ function showPage(pageId) {
     // Убираем активный класс у всех страниц и навигации
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
 
     // Активируем нужную страницу
     document.getElementById(pageId).classList.add('active');
 
-    // Активируем соответствующий пункт навигации, если вызвано из события
+    // Активируем соответствующий пункт десктопной навигации, если вызвано из события
     if (typeof event !== 'undefined' && event.target) {
         const navItem = event.target.closest('.nav-item');
         if (navItem) {
             navItem.classList.add('active');
         }
     }
+
+    // Активируем соответствующий пункт мобильной навигации
+    const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+    mobileNavItems.forEach(item => {
+        if (item.getAttribute('data-page') === pageId) {
+            item.classList.add('active');
+        }
+    });
 
     // Обновляем заголовок
     const titles = {
@@ -151,6 +160,9 @@ function showPage(pageId) {
     if (pageId === 'categories') {
         updateCategoriesPage();
     }
+
+    // Прокручиваем страницу наверх
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Обновление опций категорий в зависимости от типа операции
