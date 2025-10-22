@@ -56,7 +56,14 @@ function updateSyncIndicator(status) {
 // Главная функция обновления отображения данных
 function updateDisplay() {
     const monthTransactions = transactions.filter(t => t.month === currentMonth);
-    
+
+    // Новый дизайн
+    updateCurrencyBalances();
+    updateRecentTransactionCards();
+    updateTransactionsList();
+    updateCategoriesAnalytics();
+
+    // Старые функции (для совместимости)
     updateDashboard();
     updateSummaryCards(monthTransactions);
     updateRecentTransactions();

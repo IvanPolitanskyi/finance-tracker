@@ -1155,4 +1155,567 @@ tr:hover {
         padding-bottom: max(70px, calc(70px + env(safe-area-inset-bottom)));
     }
 }
+
+/* ========================================
+   НОВЫЙ ДИЗАЙН - ПОЛНАЯ ПЕРЕРАБОТКА
+   ======================================== */
+
+/* Балансы по валютам */
+.currency-balances {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.currency-balance-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.currency-balance-card:hover {
+    transform: translateY(-2px);
+}
+
+.currency-balance-card.mdl { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.currency-balance-card.uah { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.currency-balance-card.usd { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.currency-balance-card.eur { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.currency-balance-card.usdt { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+
+.currency-code {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.currency-amount {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+/* Быстрые кнопки действий */
+.quick-action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.quick-btn {
+    background: white;
+    border: 2px solid #e9ecef;
+    padding: 20px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.quick-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.quick-btn-icon {
+    font-size: 24px;
+}
+
+.income-btn {
+    border-color: #16a34a;
+    color: #16a34a;
+}
+
+.income-btn:hover {
+    background: #16a34a;
+    color: white;
+}
+
+.expense-btn {
+    border-color: #dc2626;
+    color: #dc2626;
+}
+
+.expense-btn:hover {
+    background: #dc2626;
+    color: white;
+}
+
+/* Быстрая форма добавления */
+.quick-add-form {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.quick-add-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.quick-add-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.close-quick-form {
+    background: #f1f5f9;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.close-quick-form:hover {
+    background: #e2e8f0;
+    transform: rotate(90deg);
+}
+
+.amount-section {
+    margin-bottom: 20px;
+}
+
+.quick-amount-input {
+    width: 100%;
+    padding: 16px;
+    font-size: 32px;
+    font-weight: 700;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 12px;
+    transition: border-color 0.3s ease;
+}
+
+.quick-amount-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.quick-amounts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.quick-amount-btn {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quick-amount-btn:hover {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+    transform: scale(1.05);
+}
+
+.quick-form-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.quick-select {
+    padding: 14px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.quick-select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.quick-input {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 16px;
+    margin-bottom: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.quick-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.quick-form-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.quick-form-actions .btn {
+    flex: 1;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+}
+
+/* Секция последних операций */
+.recent-section {
+    margin-bottom: 24px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.see-all-link {
+    color: #667eea;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.see-all-link:hover {
+    color: #764ba2;
+}
+
+/* Карточки транзакций */
+.transaction-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.transaction-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.transaction-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateX(4px);
+}
+
+.transaction-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.transaction-card-icon.income {
+    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+}
+
+.transaction-card-icon.expense {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.transaction-card-icon.exchange {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.transaction-card-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.transaction-card-category {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+
+.transaction-card-description {
+    font-size: 14px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.transaction-card-amount {
+    font-size: 18px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.transaction-card-amount.income {
+    color: #16a34a;
+}
+
+.transaction-card-amount.expense {
+    color: #dc2626;
+}
+
+/* Фильтры транзакций */
+.transaction-filters {
+    padding: 16px 0;
+    margin-bottom: 16px;
+}
+
+.filter-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-pill {
+    background: white;
+    border: 2px solid #e9ecef;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #64748b;
+}
+
+.filter-pill:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.filter-pill.active {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+}
+
+/* Список транзакций */
+.transactions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.transaction-day-group {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.transaction-day-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.transaction-day-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Сводка за месяц */
+.month-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.summary-card {
+    padding: 20px;
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.summary-card.income-summary {
+    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+}
+
+.summary-card.expense-summary {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.summary-label {
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.summary-amount {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+/* Секция категорий */
+.categories-section {
+    margin-bottom: 32px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 16px;
+}
+
+.categories-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.category-bar {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.category-bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.category-bar-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.category-bar-amount {
+    font-size: 16px;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.category-bar-progress {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.category-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+    .currency-balances {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .currency-amount {
+        font-size: 20px;
+    }
+
+    .quick-action-buttons {
+        gap: 10px;
+    }
+
+    .quick-btn {
+        padding: 16px;
+        font-size: 14px;
+    }
+
+    .quick-btn-icon {
+        font-size: 20px;
+    }
+
+    .quick-amount-input {
+        font-size: 28px;
+        padding: 14px;
+    }
+
+    .quick-amounts {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quick-form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .month-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-pills {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 8px;
+    }
+
+    .filter-pill {
+        white-space: nowrap;
+    }
+}
 }

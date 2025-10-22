@@ -32,21 +32,17 @@
             <nav>
                 <div class="nav-item active" onclick="showPage('dashboard')">
                     <span class="nav-icon">📊</span>
-                    <span>Дашборд</span>
+                    <span>Главная</span>
                 </div>
                 <div class="nav-item" onclick="showPage('transactions')">
-                    <span class="nav-icon">💳</span>
-                    <span>Транзакции</span>
+                    <span class="nav-icon">📜</span>
+                    <span>История</span>
                 </div>
                 <div class="nav-item" onclick="showPage('exchange')">
                     <span class="nav-icon">💱</span>
-                    <span>Обмен валют</span>
+                    <span>Обмен</span>
                 </div>
                 <div class="nav-item" onclick="showPage('categories')">
-                    <span class="nav-icon">📂</span>
-                    <span>Категории</span>
-                </div>
-                <div class="nav-item" onclick="showPage('analytics')">
                     <span class="nav-icon">📈</span>
                     <span>Аналитика</span>
                 </div>
@@ -90,72 +86,93 @@
             <div class="content">
                 <!-- Дашборд -->
                 <div id="dashboard" class="page active">
-                    <div class="dashboard-grid">
-                        <div class="balance-card">
-                            <div class="balance-amount" id="total-balance">0 MDL</div>
-                            <div class="balance-label">Общий баланс</div>
+                    <!-- Балансы по валютам -->
+                    <div class="currency-balances" id="currencyBalances">
+                        <!-- Динамически генерируется -->
+                    </div>
+
+                    <!-- Быстрые действия -->
+                    <div class="quick-action-buttons">
+                        <button class="quick-btn income-btn" onclick="showQuickAddTransaction('income')">
+                            <span class="quick-btn-icon">💰</span>
+                            <span class="quick-btn-text">Добавить доход</span>
+                        </button>
+                        <button class="quick-btn expense-btn" onclick="showQuickAddTransaction('expense')">
+                            <span class="quick-btn-icon">💸</span>
+                            <span class="quick-btn-text">Добавить расход</span>
+                        </button>
+                    </div>
+
+                    <!-- Быстрая форма добавления (скрыта по умолчанию) -->
+                    <div class="quick-add-form" id="quickAddForm" style="display: none;">
+                        <div class="quick-add-header">
+                            <h3 id="quickAddTitle">Добавить расход</h3>
+                            <button class="close-quick-form" onclick="hideQuickAddTransaction()">✕</button>
                         </div>
-                        
-                        <div class="quick-actions">
-                            <div class="quick-action income" onclick="openAddTransactionModal('income')">
-                                <div class="quick-action-icon">💰</div>
-                                <div>Доход</div>
+
+                        <div class="amount-section">
+                            <input type="number" id="quickAmountInput" placeholder="0" class="quick-amount-input" step="0.01">
+                            <div class="quick-amounts">
+                                <button class="quick-amount-btn" onclick="setQuickAmount(50)">50</button>
+                                <button class="quick-amount-btn" onclick="setQuickAmount(100)">100</button>
+                                <button class="quick-amount-btn" onclick="setQuickAmount(500)">500</button>
+                                <button class="quick-amount-btn" onclick="setQuickAmount(1000)">1000</button>
                             </div>
-                            <div class="quick-action expense" onclick="openAddTransactionModal('expense')">
-                                <div class="quick-action-icon">💸</div>
-                                <div>Расход</div>
-                            </div>
-                            <div class="quick-action exchange" onclick="showPage('exchange')">
-                                <div class="quick-action-icon">💱</div>
-                                <div>Обмен</div>
-                            </div>
+                        </div>
+
+                        <div class="quick-form-row">
+                            <select id="quickCurrencySelect" class="quick-select">
+                                <option value="MDL">MDL</option>
+                                <option value="UAH">UAH</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="USDT">USDT</option>
+                            </select>
+                            <select id="quickCategorySelect" class="quick-select">
+                                <!-- Динамически заполняется -->
+                            </select>
+                        </div>
+
+                        <input type="text" id="quickDescriptionInput" placeholder="Описание (необязательно)" class="quick-input">
+
+                        <div class="quick-form-actions">
+                            <button class="btn btn-secondary" onclick="hideQuickAddTransaction()">Отмена</button>
+                            <button class="btn btn-primary" onclick="addQuickTransaction()">Добавить</button>
                         </div>
                     </div>
 
-                    <!-- Сводка по валютам -->
-                    <div class="summary" id="summaryContainer"></div>
-
                     <!-- Последние транзакции -->
-                    <div class="transactions-table">
-                        <div class="table-header">
-                            <h3 class="table-title">Последние транзакции</h3>
-                            <button class="btn btn-primary" onclick="showPage('transactions')">Все транзакции</button>
+                    <div class="recent-section">
+                        <div class="section-header">
+                            <h3>Последние операции</h3>
+                            <a href="#" onclick="showPage('transactions'); return false;" class="see-all-link">Все →</a>
                         </div>
-                        <div id="recent-transactions"></div>
+                        <div id="recentTransactionCards" class="transaction-cards">
+                            <!-- Динамически генерируется -->
+                        </div>
                     </div>
                 </div>
 
                 <!-- Транзакции -->
                 <div id="transactions" class="page">
-                    <div class="transactions-table">
-                        <div class="table-header">
-                            <h3 class="table-title">Все транзакции</h3>
-                            <div style="display: flex; gap: 12px;">
-                                <select class="form-select" style="width: auto;" onchange="filterTransactions()" id="typeFilter">
-                                    <option value="all">Все типы</option>
-                                    <option value="income">Доходы</option>
-                                    <option value="expense">Расходы</option>
-                                </select>
-                                <button class="btn btn-primary" onclick="openAddTransactionModal()">➕ Добавить</button>
-                            </div>
+                    <!-- Фильтры -->
+                    <div class="transaction-filters">
+                        <div class="filter-pills">
+                            <button class="filter-pill active" data-filter="all" onclick="filterTransactionsByType('all')">Все</button>
+                            <button class="filter-pill" data-filter="income" onclick="filterTransactionsByType('income')">Доходы</button>
+                            <button class="filter-pill" data-filter="expense" onclick="filterTransactionsByType('expense')">Расходы</button>
+                            <button class="filter-pill" data-filter="exchange" onclick="filterTransactionsByType('exchange')">Обмены</button>
                         </div>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Дата</th>
-                                        <th>Тип</th>
-                                        <th>Категория</th>
-                                        <th>Описание</th>
-                                        <th>Сумма</th>
-                                        <th>Валюта</th>
-                                        <th>Действие</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="transactionTable">
-                                </tbody>
-                            </table>
-                        </div>
+                    </div>
+
+                    <!-- Список транзакций по дням -->
+                    <div id="transactionsList" class="transactions-list">
+                        <!-- Динамически генерируется, группировка по дням -->
+                    </div>
+
+                    <!-- Кнопка "Загрузить еще" -->
+                    <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+                        <button class="btn btn-secondary" onclick="loadMoreTransactions()">Загрузить еще</button>
                     </div>
                 </div>
 
@@ -220,15 +237,35 @@
                     </div>
                 </div>
 
-                <!-- Категории -->
+                <!-- Категории и Аналитика -->
                 <div id="categories" class="page">
-                    <div id="categoryBreakdown" class="categories-grid"></div>
-                </div>
+                    <!-- Сводка за месяц -->
+                    <div class="month-summary">
+                        <div class="summary-card income-summary">
+                            <div class="summary-label">Доходы за месяц</div>
+                            <div class="summary-amount" id="monthIncome">0 MDL</div>
+                        </div>
+                        <div class="summary-card expense-summary">
+                            <div class="summary-label">Расходы за месяц</div>
+                            <div class="summary-amount" id="monthExpense">0 MDL</div>
+                        </div>
+                    </div>
 
-                <!-- Аналитика -->
-                <div id="analytics" class="page">
-                    <h2>Детальная аналитика - в разработке</h2>
-                    <p>Здесь будут графики, диаграммы и детальный анализ финансов.</p>
+                    <!-- Категории расходов -->
+                    <div class="categories-section">
+                        <h3 class="section-title">Расходы по категориям</h3>
+                        <div id="expenseCategoriesChart" class="categories-chart">
+                            <!-- Динамически генерируется -->
+                        </div>
+                    </div>
+
+                    <!-- Категории доходов -->
+                    <div class="categories-section">
+                        <h3 class="section-title">Доходы по категориям</h3>
+                        <div id="incomeCategoriesChart" class="categories-chart">
+                            <!-- Динамически генерируется -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -299,7 +336,7 @@
             <span class="mobile-nav-label">Главная</span>
         </div>
         <div class="mobile-nav-item" onclick="showPage('transactions')" data-page="transactions">
-            <span class="mobile-nav-icon">💳</span>
+            <span class="mobile-nav-icon">📜</span>
             <span class="mobile-nav-label">История</span>
         </div>
         <div class="mobile-nav-item nav-center" onclick="showPage('exchange')" data-page="exchange">
@@ -308,10 +345,6 @@
             </div>
         </div>
         <div class="mobile-nav-item" onclick="showPage('categories')" data-page="categories">
-            <span class="mobile-nav-icon">📂</span>
-            <span class="mobile-nav-label">Категории</span>
-        </div>
-        <div class="mobile-nav-item" onclick="showPage('analytics')" data-page="analytics">
             <span class="mobile-nav-icon">📈</span>
             <span class="mobile-nav-label">Аналитика</span>
         </div>
