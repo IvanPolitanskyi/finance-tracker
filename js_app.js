@@ -106,12 +106,7 @@ function initializeUI() {
     // Устанавливаем текущую дату
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('dateInput').value = today;
-    
-    const exchangeDateInput = document.getElementById('exchangeDateInput');
-    if (exchangeDateInput) {
-        exchangeDateInput.value = today;
-    }
-    
+
     // Устанавливаем текущий месяц
     document.getElementById('monthSelect').value = currentMonth;
     
@@ -130,11 +125,18 @@ function showPage(pageId) {
     // Убираем активный класс у всех страниц и навигации
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-    
+
     // Активируем нужную страницу
     document.getElementById(pageId).classList.add('active');
-    event.target.closest('.nav-item').classList.add('active');
-    
+
+    // Активируем соответствующий пункт навигации, если вызвано из события
+    if (typeof event !== 'undefined' && event.target) {
+        const navItem = event.target.closest('.nav-item');
+        if (navItem) {
+            navItem.classList.add('active');
+        }
+    }
+
     // Обновляем заголовок
     const titles = {
         dashboard: 'Дашборд',
@@ -144,7 +146,7 @@ function showPage(pageId) {
         analytics: 'Аналитика'
     };
     document.getElementById('page-title').textContent = titles[pageId];
-    
+
     // Обновляем содержимое в зависимости от страницы
     if (pageId === 'categories') {
         updateCategoriesPage();
@@ -247,39 +249,61 @@ function calculateExchangeRate() {
     const toAmount = parseFloat(document.getElementById('toAmountInput').value) || 0;
     const fromCurrency = document.getElementById('fromCurrencySelect').value;
     const toCurrency = document.getElementById('toCurrencySelect').value;
-    
+
     if (fromAmount > 0 && toAmount > 0 && fromCurrency !== toCurrency) {
         const rate = (toAmount / fromAmount).toFixed(4);
-        document.getElementById('rateDisplay').textContent = `Курс: 1 ${fromCurrency} = ${rate} ${toCurrency}`;
+        document.getElementById('rateDisplay').textContent = `1 ${fromCurrency} = ${rate} ${toCurrency}`;
+    } else if (fromCurrency === toCurrency) {
+        document.getElementById('rateDisplay').textContent = 'Выберите разные валюты';
     } else {
-        document.getElementById('rateDisplay').textContent = 'Курс: -';
+        document.getElementById('rateDisplay').textContent = 'Введите сумму для расчета курса';
     }
+}
+
+// Функция обмена валют местами
+function swapCurrencies() {
+    const fromAmount = document.getElementById('fromAmountInput').value;
+    const toAmount = document.getElementById('toAmountInput').value;
+    const fromCurrency = document.getElementById('fromCurrencySelect').value;
+    const toCurrency = document.getElementById('toCurrencySelect').value;
+
+    // Меняем местами суммы
+    document.getElementById('fromAmountInput').value = toAmount;
+    document.getElementById('toAmountInput').value = fromAmount;
+
+    // Меняем местами валюты
+    document.getElementById('fromCurrencySelect').value = toCurrency;
+    document.getElementById('toCurrencySelect').value = fromCurrency;
+
+    // Пересчитываем курс
+    calculateExchangeRate();
 }
 
 // Добавление операции обмена валют
 function addExchange() {
-    const date = document.getElementById('exchangeDateInput').value;
     const fromAmount = parseFloat(document.getElementById('fromAmountInput').value);
     const toAmount = parseFloat(document.getElementById('toAmountInput').value);
     const fromCurrency = document.getElementById('fromCurrencySelect').value;
     const toCurrency = document.getElementById('toCurrencySelect').value;
-    const fee = parseFloat(document.getElementById('feeInput').value) || 0;
-    const feeCurrency = document.getElementById('feeCurrencySelect').value;
-    
+
     // Валидация данных
-    if (!date || !fromAmount || !toAmount || fromAmount <= 0 || toAmount <= 0) {
-        alert('Пожалуйста, заполните все обязательные поля корректно!');
+    if (!fromAmount || !toAmount || fromAmount <= 0 || toAmount <= 0) {
+        alert('Пожалуйста, введите корректные суммы для обмена!');
         return;
     }
-    
+
     if (fromCurrency === toCurrency) {
         alert('Валюты обмена должны отличаться!');
         return;
     }
-    
+
+    // Используем текущую дату
+    const now = new Date();
+    const date = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+
     const rate = (toAmount / fromAmount).toFixed(4);
-    const exchangeDescription = `Обмен ${fromCurrency}→${toCurrency} по курсу ${rate}`;
-    
+    const exchangeDescription = `Обмен ${fromCurrency}→${toCurrency} (курс: ${rate})`;
+
     // Создаем транзакцию расхода (отдаем валюту)
     const expenseTransaction = {
         id: Date.now(),
@@ -289,10 +313,10 @@ function addExchange() {
         amount: fromAmount,
         currency: fromCurrency,
         description: exchangeDescription,
-        month: new Date(date).getMonth(),
-        timestamp: new Date().toISOString()
+        month: now.getMonth(),
+        timestamp: now.toISOString()
     };
-    
+
     // Создаем транзакцию дохода (получаем валюту)
     const incomeTransaction = {
         id: Date.now() + 1,
@@ -302,39 +326,24 @@ function addExchange() {
         amount: toAmount,
         currency: toCurrency,
         description: exchangeDescription,
-        month: new Date(date).getMonth(),
-        timestamp: new Date().toISOString()
+        month: now.getMonth(),
+        timestamp: now.toISOString()
     };
-    
+
     transactions.push(expenseTransaction);
     transactions.push(incomeTransaction);
-    
-    // Если есть комиссия, добавляем её как расход
-    if (fee > 0) {
-        const feeTransaction = {
-            id: Date.now() + 2,
-            date: date,
-            type: 'expense',
-            category: 'exchange',
-            amount: fee,
-            currency: feeCurrency,
-            description: `Комиссия за обмен ${fromCurrency}→${toCurrency}`,
-            month: new Date(date).getMonth(),
-            timestamp: new Date().toISOString()
-        };
-        transactions.push(feeTransaction);
-    }
-    
+
     // Очищаем форму обмена
     clearExchangeForm();
-    
+
     // Обновляем отображение и сохраняем данные
     updateDisplay();
     saveData();
-    
-    const feeText = fee > 0 ? ` (комиссия: ${fee} ${feeCurrency})` : '';
-    alert(`Обмен выполнен: ${fromAmount} ${fromCurrency} → ${toAmount} ${toCurrency}${feeText}`);
-    
+
+    // Показываем успешное сообщение и возвращаемся на дашборд
+    alert(`✓ Обмен выполнен успешно!\n\n${fromAmount} ${fromCurrency} → ${toAmount} ${toCurrency}`);
+    showPage('dashboard');
+
     console.log('Добавлен обмен валют:', { expenseTransaction, incomeTransaction });
 }
 
@@ -342,8 +351,7 @@ function addExchange() {
 function clearExchangeForm() {
     document.getElementById('fromAmountInput').value = '';
     document.getElementById('toAmountInput').value = '';
-    document.getElementById('feeInput').value = '0';
-    document.getElementById('rateDisplay').textContent = 'Курс: -';
+    document.getElementById('rateDisplay').textContent = 'Введите сумму для расчета курса';
 }
 
 // Фильтрация транзакций

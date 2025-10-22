@@ -159,71 +159,60 @@
                 <!-- Обмен валют -->
                 <div id="exchange" class="page">
                     <div class="exchange-section">
-                        <h3>💱 Обмен валют</h3>
+                        <div class="exchange-header">
+                            <button class="back-btn" onclick="showPage('dashboard')">
+                                <span class="back-arrow">←</span> Назад
+                            </button>
+                            <h3>💱 Обмен валют</h3>
+                        </div>
                         <div class="exchange-form">
-                            <div class="input-group">
-                                <label>Дата обмена</label>
-                                <input type="date" id="exchangeDateInput">
+                            <!-- Отдаете -->
+                            <div class="exchange-card from-card">
+                                <label class="exchange-label">Отдаете</label>
+                                <div class="currency-input-group">
+                                    <input type="number" id="fromAmountInput" placeholder="0.00" step="0.01" oninput="calculateExchangeRate()" class="amount-input">
+                                    <select id="fromCurrencySelect" onchange="calculateExchangeRate()" class="currency-select">
+                                        <option value="MDL">MDL</option>
+                                        <option value="UAH">UAH</option>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="USDT">USDT</option>
+                                    </select>
+                                </div>
                             </div>
-                            
-                            <div class="input-group">
-                                <label>Отдаете</label>
-                                <input type="number" id="fromAmountInput" placeholder="0.00" step="0.01" oninput="calculateExchangeRate()">
+
+                            <!-- Стрелка обмена -->
+                            <div class="exchange-arrow-container">
+                                <button class="swap-btn" onclick="swapCurrencies()" title="Поменять местами валюты">
+                                    <span class="swap-icon">⇅</span>
+                                </button>
                             </div>
-                            
-                            <div class="input-group">
-                                <label>Валюта</label>
-                                <select id="fromCurrencySelect" onchange="calculateExchangeRate()">
-                                    <option value="MDL">MDL</option>
-                                    <option value="UAH">UAH</option>
-                                    <option value="USD">USD</option>
-                                    <option value="EUR">EUR</option>
-                                    <option value="USDT">USDT</option>
-                                </select>
+
+                            <!-- Получаете -->
+                            <div class="exchange-card to-card">
+                                <label class="exchange-label">Получаете</label>
+                                <div class="currency-input-group">
+                                    <input type="number" id="toAmountInput" placeholder="0.00" step="0.01" oninput="calculateExchangeRate()" class="amount-input">
+                                    <select id="toCurrencySelect" onchange="calculateExchangeRate()" class="currency-select">
+                                        <option value="UAH" selected>UAH</option>
+                                        <option value="MDL">MDL</option>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="USDT">USDT</option>
+                                    </select>
+                                </div>
                             </div>
-                            
-                            <div class="exchange-arrow">→</div>
-                            
-                            <div class="input-group">
-                                <label>Получаете</label>
-                                <input type="number" id="toAmountInput" placeholder="0.00" step="0.01" oninput="calculateExchangeRate()">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label>Валюта</label>
-                                <select id="toCurrencySelect" onchange="calculateExchangeRate()">
-                                    <option value="MDL">MDL</option>
-                                    <option value="UAH">UAH</option>
-                                    <option value="USD">USD</option>
-                                    <option value="EUR">EUR</option>
-                                    <option value="USDT">USDT</option>
-                                </select>
-                            </div>
-                            
-                            <div class="input-group">
-                                <label>Комиссия</label>
-                                <input type="number" id="feeInput" placeholder="0.00" step="0.01" value="0">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label>Валюта комиссии</label>
-                                <select id="feeCurrencySelect">
-                                    <option value="MDL">MDL</option>
-                                    <option value="UAH">UAH</option>
-                                    <option value="USD">USD</option>
-                                    <option value="EUR">EUR</option>
-                                    <option value="USDT">USDT</option>
-                                </select>
-                            </div>
-                            
+
+                            <!-- Курс обмена -->
                             <div class="rate-display" id="rateDisplay">
-                                Курс: -
+                                Введите сумму для расчета курса
                             </div>
-                            
-                            <div class="input-group">
-                                <label>&nbsp;</label>
-                                <button class="btn btn-primary" onclick="addExchange()">Обменять</button>
-                            </div>
+
+                            <!-- Кнопка обмена -->
+                            <button class="btn btn-primary exchange-btn" onclick="addExchange()">
+                                <span class="btn-icon">💱</span>
+                                Выполнить обмен
+                            </button>
                         </div>
                     </div>
                 </div>
